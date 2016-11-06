@@ -88,4 +88,5 @@ public final class RxBillingShadowActivity extends Activity {
         RxBilling.getPurchaseFlowService(this).onActivityResult(resultCode, data, extras);
         finish();
     }
+
 }

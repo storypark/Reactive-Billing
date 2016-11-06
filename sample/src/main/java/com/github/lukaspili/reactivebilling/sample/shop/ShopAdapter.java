@@ -5,21 +5,19 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.github.lukaspili.reactivebilling.model.SkuDetails;
-
 import java.util.ArrayList;
 import java.util.List;
 
 public class ShopAdapter extends RecyclerView.Adapter<ShopAdapter.ViewHolder> {
 
     private DidClickItem didClick;
-    private List<SkuDetails> items = new ArrayList<>();
+    private List<String> items = new ArrayList<>();
 
     public void bind(DidClickItem didClick) {
         this.didClick = didClick;
     }
 
-    public void bind(List<SkuDetails> items) {
+    public void bind(List<String> items) {
         Log.d(getClass().getName(), String.format("Bind items: %d", items.size()));
 
         this.items = items;
@@ -33,13 +31,13 @@ public class ShopAdapter extends RecyclerView.Adapter<ShopAdapter.ViewHolder> {
 
     @Override
     public void onBindViewHolder(ViewHolder holder, final int position) {
-        final SkuDetails skuDetails = items.get(position);
+        final String skuDetails = items.get(position);
 
         holder.rowView.bind(skuDetails);
         holder.rowView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                didClick.onClick(skuDetails);
+//                didClick.onClick(skuDetails);
             }
         });
     }
@@ -59,6 +57,6 @@ public class ShopAdapter extends RecyclerView.Adapter<ShopAdapter.ViewHolder> {
     }
 
     interface DidClickItem {
-        void onClick(SkuDetails skuDetails);
+        void onClick(String skuDetails);
     }
 }

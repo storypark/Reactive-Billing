@@ -1,4 +1,4 @@
-package com.github.lukaspili.reactivebilling.observable;
+package com.github.lukaspili.reactivebilling;
 
 import android.content.ComponentName;
 import android.content.Context;
@@ -6,10 +6,9 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
 import android.os.Looper;
+import android.support.annotation.NonNull;
 
 import com.android.vending.billing.IInAppBillingService;
-import com.github.lukaspili.reactivebilling.BillingService;
-import com.github.lukaspili.reactivebilling.RxBillingLogger;
 
 import java.util.concurrent.Semaphore;
 
@@ -19,15 +18,14 @@ import rx.Subscriber;
 import rx.functions.Action0;
 import rx.subscriptions.Subscriptions;
 
-
-public abstract class BaseObservable<T> implements Observable.OnSubscribe<T> {
+/*package*/ abstract class BaseObservable<T> implements Observable.OnSubscribe<T> {
 
     protected final Context context;
     private final Semaphore semaphore = new Semaphore(0);
 
     private BillingService billingService;
 
-    BaseObservable(Context context) {
+    /*package*/ BaseObservable(@NonNull Context context) {
         this.context = context;
     }
 
@@ -75,7 +73,7 @@ public abstract class BaseObservable<T> implements Observable.OnSubscribe<T> {
         onBillingServiceReady(billingService, observer);
     }
 
-    protected abstract void onBillingServiceReady(BillingService billingService, Observer<? super T> observer);
+    protected abstract void onBillingServiceReady(@NonNull BillingService billingService, @NonNull Observer<? super T> observer);
 
     private class Connection implements ServiceConnection {
 
@@ -114,4 +112,5 @@ public abstract class BaseObservable<T> implements Observable.OnSubscribe<T> {
             billingService = null;
         }
     }
+
 }

@@ -6,12 +6,12 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.github.lukaspili.reactivebilling.model.SkuDetails;
 import com.github.lukaspili.reactivebilling.sample.R;
 
 /**
  * Created by lukasz on 06/05/16.
  */
+// TODO: 7/11/16 Update sample to new api
 public class ShopRowView extends LinearLayout {
 
     private TextView titleTextView;
@@ -27,9 +27,9 @@ public class ShopRowView extends LinearLayout {
         priceTextView = (TextView) view.findViewById(R.id.price);
     }
 
-    public void bind(SkuDetails skuDetails) {
-        titleTextView.setText(skuDetails.getTitle());
-        descriptionTextView.setText(skuDetails.getDescription());
-        priceTextView.setText(skuDetails.getPrice());
+    public void bind(String string) {
+        titleTextView.setText(string);
+        descriptionTextView.setText(string);
+        priceTextView.setText(string);
     }
 }

@@ -1,0 +1,52 @@
+package com.github.lukaspili.reactivebilling;
+
+import android.app.PendingIntent;
+import android.content.Context;
+import android.os.Bundle;
+import android.os.RemoteException;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
+import rx.Observer;
+
+/*package*/ final class StartPurchaseOnSubscribe extends BaseObservable<Void> {
+
+    private final PurchaseFlowService purchaseFlowService;
+    private final String productId;
+    private final String purchaseType;
+    private final String developerPayload;
+    private final Bundle extras;
+
+    /*package*/ StartPurchaseOnSubscribe(@NonNull Context context, @NonNull PurchaseFlowService purchaseFlowService, @NonNull String productId, @NonNull @RxBilling.PurchaseType String purchaseType, @Nullable String developerPayload, @Nullable Bundle extras) {
+        super(context);
+        this.purchaseFlowService = purchaseFlowService;
+        this.productId = productId;
+        this.purchaseType = purchaseType;
+        this.developerPayload = developerPayload;
+        this.extras = extras;
+    }
+
+    @Override
+    protected void onBillingServiceReady(@NonNull BillingService billingService, @NonNull Observer<? super Void> observer) {
+        try {
+            final PendingIntent buyIntent = billingService.getBuyIntent(productId, purchaseType, developerPayload);
+            if (buyIntent != null) {
+                observer.onNext(null);
+                observer.onCompleted();
+                purchaseFlowService.startFlow(buyIntent, extras);
+            } else {
+                observer.onError(new BillingRequestFailedException(
+                        "Failed to start purchase (" +
+                                "purchaseFlowService: " + purchaseFlowService +
+                                ", productId: " + productId +
+                                ", purchaseType: " + purchaseType +
+                                ", developerPayload: " + developerPayload +
+                                ", extras: " + extras +
+                                ')'));
+            }
+        } catch (RemoteException e) {
+            observer.onError(e);
+        }
+    }
+
+}

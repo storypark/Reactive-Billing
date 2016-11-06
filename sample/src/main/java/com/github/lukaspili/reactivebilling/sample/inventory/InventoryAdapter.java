@@ -4,7 +4,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.github.lukaspili.reactivebilling.model.Purchase;
+import com.github.lukaspili.reactivebilling.Purchase;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;

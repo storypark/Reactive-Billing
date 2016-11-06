@@ -20,61 +20,55 @@ import android.support.annotation.CheckResult;
 import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.Size;
+import android.support.annotation.StringDef;
 
-import com.github.lukaspili.reactivebilling.model.PurchaseType;
-import com.github.lukaspili.reactivebilling.observable.BillingServiceObservable;
-import com.github.lukaspili.reactivebilling.observable.ConsumePurchaseObservable;
-import com.github.lukaspili.reactivebilling.observable.GetBuyIntentObservable;
-import com.github.lukaspili.reactivebilling.observable.GetPurchasesObservable;
-import com.github.lukaspili.reactivebilling.observable.GetSkuDetailsObservable;
-import com.github.lukaspili.reactivebilling.observable.IsBillingSupportedObservable;
-import com.github.lukaspili.reactivebilling.response.GetPurchasesResponse;
-import com.github.lukaspili.reactivebilling.response.GetSkuDetailsResponse;
-import com.github.lukaspili.reactivebilling.response.PurchaseResponse;
-import com.github.lukaspili.reactivebilling.response.Response;
+import java.util.List;
 
 import rx.Observable;
 
 public final class RxBilling {
 
     @NonNull @CheckResult @MainThread
-    public static Observable<BillingService> billingService(@NonNull Context context) {
-        return BillingServiceObservable.create(context);
+    public static Observable<Boolean> isBillingSupported(@NonNull Context context, @NonNull @PurchaseType String purchaseType) {
+        return Observable.create(new IsBillingSupportedOnSubscribe(context, purchaseType));
     }
 
     @NonNull @CheckResult @MainThread
-    public static Observable<Response> isBillingSupported(@NonNull Context context, @NonNull PurchaseType purchaseType) {
-        return IsBillingSupportedObservable.create(context, purchaseType);
+    public static Observable<Void> consumePurchase(@NonNull Context context, @NonNull String purchaseToken) {
+        return Observable.create(new ConsumePurchaseOnSubscribe(context, purchaseToken));
     }
 
     @NonNull @CheckResult @MainThread
-    public static Observable<Response> consumePurchase(@NonNull Context context, String purchaseToken) {
-        return ConsumePurchaseObservable.create(context, purchaseToken);
+    public static Observable<List<String>> skuDetails(@NonNull Context context, @NonNull @PurchaseType String purchaseType, @NonNull @Size(min = 1) String... productIds) {
+        return Observable.create(new SkuDetailsOnSubscribe(context, purchaseType, productIds));
     }
 
     @NonNull @CheckResult @MainThread
-    public static Observable<GetSkuDetailsResponse> skuDetails(@NonNull Context context, @NonNull PurchaseType purchaseType, @Nullable String... productIds) {
-        return GetSkuDetailsObservable.create(context, purchaseType, productIds);
+    public static Observable<Purchases> purchases(@NonNull Context context, @NonNull @PurchaseType String purchaseType, @Nullable String continuationToken) {
+        return Observable.create(new PurchasesOnSubscribe(context, purchaseType, continuationToken));
     }
 
     @NonNull @CheckResult @MainThread
-    public static Observable<GetPurchasesResponse> purchases(@NonNull Context context, @NonNull PurchaseType purchaseType, @Nullable String continuationToken) {
-        return GetPurchasesObservable.create(context, purchaseType, continuationToken);
+    public static Observable<Void> startPurchase(@NonNull Context context, @NonNull String productId, @NonNull @PurchaseType String purchaseType, @Nullable String developerPayload, @Nullable Bundle extras) {
+        return Observable.create(new StartPurchaseOnSubscribe(context, getPurchaseFlowService(context), productId, purchaseType, developerPayload, extras));
     }
 
     @NonNull @CheckResult @MainThread
-    public static Observable<Response> startPurchase(@NonNull Context context, @NonNull String productId, @NonNull PurchaseType purchaseType, @Nullable String developerPayload, @Nullable Bundle extras) {
-        return GetBuyIntentObservable.create(context, getPurchaseFlowService(context), productId, purchaseType, developerPayload, extras);
-    }
-
-    @NonNull @CheckResult @MainThread
-    public static Observable<PurchaseResponse> purchaseFlow(@NonNull Context context) {
-        return getPurchaseFlowService(context).getObservable();
+    public static Observable<Purchase> purchaseFlow(@NonNull Context context) {
+        return getPurchaseFlowService(context).asObservable();
     }
 
     public static void setLogger(@NonNull RxBilling.Logger logger) {
         RxBillingLogger.setLogger(logger);
     }
+
+    public static final String PURCHASE_TYPE_MANAGED_PRODUCT = "inapp";
+    public static final String PURCHASE_TYPE_SUBSCRIPTION = "subs";
+    @StringDef({
+            PURCHASE_TYPE_MANAGED_PRODUCT, PURCHASE_TYPE_SUBSCRIPTION
+    })
+    public @interface PurchaseType {}
 
     @NonNull @CheckResult @MainThread
     /*package*/ static PurchaseFlowService getPurchaseFlowService(@NonNull Context context) {
@@ -83,21 +77,17 @@ public final class RxBilling {
 
     private static RxBilling instance;
 
-    private final Context context;
     private final PurchaseFlowService purchaseFlowService;
 
     @MainThread
     private static RxBilling get(@NonNull Context context) {
         if (instance == null) {
-            instance = new RxBilling(
-                    context.getApplicationContext(),
-                    new PurchaseFlowService(context.getApplicationContext()));
+            instance = new RxBilling(new PurchaseFlowService(context.getApplicationContext()));
         }
         return instance;
     }
 
-    private RxBilling(@NonNull Context context, @NonNull PurchaseFlowService purchaseFlowService) {
-        this.context = context;
+    private RxBilling(@NonNull PurchaseFlowService purchaseFlowService) {
         this.purchaseFlowService = purchaseFlowService;
     }
 

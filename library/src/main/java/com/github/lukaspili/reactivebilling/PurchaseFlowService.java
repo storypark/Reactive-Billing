@@ -5,10 +5,8 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-
-import com.github.lukaspili.reactivebilling.model.Purchase;
-import com.github.lukaspili.reactivebilling.parser.PurchaseParser;
-import com.github.lukaspili.reactivebilling.response.PurchaseResponse;
+import android.support.annotation.CheckResult;
+import android.support.annotation.NonNull;
 
 import rx.Observable;
 import rx.functions.Action0;
@@ -17,43 +15,45 @@ import rx.subjects.PublishSubject;
 /**
  * Created by lukasz on 06/05/16.
  */
-public final class PurchaseFlowService {
+/*package*/ final class PurchaseFlowService {
 
     private final Context context;
-    private final PublishSubject<PurchaseResponse> subject = PublishSubject.create();
-    private final Observable<PurchaseResponse> observable = subject.doOnSubscribe(new Action0() {
-        @Override
-        public void call() {
-            if (hasSubscription) {
-                throw new IllegalStateException("Already has subscription");
-            }
-
-            RxBillingLogger.v("Purchase flow - subscribe (thread %s)", Thread.currentThread().getName());
-            hasSubscription = true;
-        }
-    }).doOnUnsubscribe(new Action0() {
-        @Override
-        public void call() {
-            if (!hasSubscription) {
-                throw new IllegalStateException("Doesn't have any subscription");
-            }
-
-            RxBillingLogger.v("Purchase flow - unsubscribe (thread %s)", Thread.currentThread().getName());
-            hasSubscription = false;
-        }
-    });
+    private final PublishSubject<Purchase> purchaseSubject = PublishSubject.create();
 
     private boolean hasSubscription;
+    private final Observable<Purchase> purchaseObservable =
+            purchaseSubject.doOnSubscribe(new Action0() {
+                @Override
+                public void call() {
+                    if (hasSubscription) {
+                        throw new IllegalStateException("Already has subscription");
+                    }
 
-    PurchaseFlowService(Context context) {
+                    RxBillingLogger.v("Purchase flow - subscribe (thread %s)", Thread.currentThread().getName());
+                    hasSubscription = true;
+                }
+            }).doOnUnsubscribe(new Action0() {
+                @Override
+                public void call() {
+                    if (!hasSubscription) {
+                        throw new IllegalStateException("Doesn't have any subscription");
+                    }
+
+                    RxBillingLogger.v("Purchase flow - unsubscribe (thread %s)", Thread.currentThread().getName());
+                    hasSubscription = false;
+                }
+            });
+
+    /*package*/ PurchaseFlowService(Context context) {
         this.context = context;
     }
 
-    Observable<PurchaseResponse> getObservable() {
-        return observable;
+    @NonNull @CheckResult
+    /*package*/ Observable<Purchase> asObservable() {
+        return purchaseObservable;
     }
 
-    public void startFlow(PendingIntent buyIntent, Bundle extras) {
+    /*package*/ void startFlow(PendingIntent buyIntent, Bundle extras) {
         if (!hasSubscription) {
             throw new IllegalStateException("Cannot start flow without subscribers");
         }
@@ -71,27 +71,28 @@ public final class PurchaseFlowService {
         context.startActivity(intent);
     }
 
-    void onActivityResult(int resultCode, Intent data, Bundle extras) {
+    /*package*/ void onActivityResult(int resultCode, Intent data, Bundle extras) {
         if (!hasSubscription) {
-            throw new IllegalStateException("Subject cannot be null when receiving purchase result");
+            throw new IllegalStateException("Subject cannot be unsubscribed when receiving purchase result");
         }
 
         if (resultCode == Activity.RESULT_OK) {
             RxBillingLogger.v("Purchase flow result - OK (thread %s)", Thread.currentThread().getName());
 
-            int response = data.getIntExtra("RESPONSE_CODE", -1);
+            final int response = data.getIntExtra("RESPONSE_CODE", -1);
             RxBillingLogger.v("Purchase flow result - response: %d (thread %s)", response, Thread.currentThread().getName());
 
             if (response == 0) {
-                Purchase purchase = PurchaseParser.parse(data.getStringExtra("INAPP_PURCHASE_DATA"));
-                String signature = data.getStringExtra("INAPP_DATA_SIGNATURE");
-                subject.onNext(new PurchaseResponse(response, purchase, signature, extras, false));
+                final String purchase = data.getStringExtra("INAPP_PURCHASE_DATA");
+                final String signature = data.getStringExtra("INAPP_DATA_SIGNATURE");
+                purchaseSubject.onNext(new Purchase(response, purchase, signature, extras));
             } else {
-                subject.onNext(new PurchaseResponse(response, null, null, extras, false));
+                purchaseSubject.onNext(new Purchase(response, null, null, extras));
             }
         } else {
             RxBillingLogger.v("Purchase flow result - CANCELED (thread %s)", Thread.currentThread().getName());
-            subject.onNext(new PurchaseResponse(-1, null, null, extras, true));
+            purchaseSubject.onNext(new Purchase(-1, null, null, extras));
         }
     }
+
 }

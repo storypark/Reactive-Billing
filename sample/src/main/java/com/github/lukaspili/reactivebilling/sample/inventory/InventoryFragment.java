@@ -14,26 +14,20 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.github.lukaspili.reactivebilling.Purchase;
+import com.github.lukaspili.reactivebilling.Purchases;
 import com.github.lukaspili.reactivebilling.RxBilling;
-import com.github.lukaspili.reactivebilling.model.Purchase;
-import com.github.lukaspili.reactivebilling.model.PurchaseType;
-import com.github.lukaspili.reactivebilling.response.GetPurchasesResponse;
-import com.github.lukaspili.reactivebilling.response.Response;
 import com.github.lukaspili.reactivebilling.sample.R;
 import com.github.lukaspili.reactivebilling.sample.TabsAdapter;
-import com.github.lukaspili.reactivebilling.sample.Utils;
 
-import java.util.List;
-
-import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
-import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
 /**
  * Created by lukasz on 06/05/16.
  */
+// TODO: 7/11/16 Update sample for new api
 public class InventoryFragment extends Fragment implements TabsAdapter.Tab {
 
     private SwipeRefreshLayout refreshLayout;
@@ -67,7 +61,7 @@ public class InventoryFragment extends Fragment implements TabsAdapter.Tab {
             public void onClick(final Purchase purchase) {
                 dialog = new AlertDialog.Builder(getContext())
                         .setTitle("Consume item")
-                        .setMessage(String.format("Do you want to consume the %s?", purchase.getProductId()))
+                        .setMessage(String.format("Do you want to consume the %s?", "TODO"))
                         .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
                                 consume(purchase);
@@ -104,15 +98,15 @@ public class InventoryFragment extends Fragment implements TabsAdapter.Tab {
     private void load() {
         Log.d(getClass().getName(), "Load inventory");
 
-        RxBilling.purchases(getContext(), PurchaseType.PRODUCT, null)
+        RxBilling.purchases(getContext(), RxBilling.PURCHASE_TYPE_MANAGED_PRODUCT, null)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Action1<GetPurchasesResponse>() {
+                .subscribe(new Action1<Purchases>() {
                     @Override
-                    public void call(GetPurchasesResponse getPurchasesResponse) {
+                    public void call(Purchases purchases) {
                         if (getActivity() == null) return;
                         refreshLayout.setRefreshing(false);
-                        didSucceedGetPurchases(getPurchasesResponse);
+                        didSucceedGetPurchases(purchases);
                     }
                 }, new Action1<Throwable>() {
                     @Override
@@ -124,26 +118,22 @@ public class InventoryFragment extends Fragment implements TabsAdapter.Tab {
                 });
     }
 
-    private void didSucceedGetPurchases(GetPurchasesResponse getPurchasesResponse) {
-        if (getPurchasesResponse.isSuccess()) {
-            Observable.from(getPurchasesResponse.getList())
-                    .map(new Func1<GetPurchasesResponse.PurchaseResponse, Purchase>() {
-                        @Override
-                        public Purchase call(GetPurchasesResponse.PurchaseResponse purchaseResponse) {
-                            return purchaseResponse.getPurchase();
-                        }
-                    })
-                    .toList()
-                    .subscribe(new Action1<List<Purchase>>() {
-                        @Override
-                        public void call(List<Purchase> purchases) {
-                            adapter.bind(purchases);
-                        }
-                    });
-        } else {
-            // error
-            Log.d(getClass().getName(), "error");
-        }
+    private void didSucceedGetPurchases(Purchases purchases) {
+
+//        Observable.from(purchases.)
+//                .map(new Func1<String, Purchase>() {
+//                    @Override
+//                    public Purchase call(GetPurchasesResponse.PurchaseResponse purchaseResponse) {
+//                        return purchaseResponse.getPurchase();
+//                    }
+//                })
+//                .toList()
+//                .subscribe(new Action1<List<Purchase>>() {
+//                    @Override
+//                    public void call(List<Purchase> purchases) {
+//                        adapter.bind(purchases);
+//                    }
+//                });
     }
 
     private void didFailGetPurchases() {
@@ -154,35 +144,35 @@ public class InventoryFragment extends Fragment implements TabsAdapter.Tab {
     // Consume
 
     private void consume(Purchase purchase) {
-        RxBilling.consumePurchase(getContext(), purchase.getPurchaseToken())
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Action1<Response>() {
-                    @Override
-                    public void call(Response response) {
-                        didSucceedConsumePurchase(response);
-                    }
-                }, new Action1<Throwable>() {
-                    @Override
-                    public void call(Throwable throwable) {
-                        didFailConsumePurchase();
-                    }
-                });
+//        RxBilling.consumePurchase(getContext(), purchase.getPurchaseToken())
+//                .subscribeOn(Schedulers.io())
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribe(new Action1<Response>() {
+//                    @Override
+//                    public void call(Response response) {
+//                        didSucceedConsumePurchase(response);
+//                    }
+//                }, new Action1<Throwable>() {
+//                    @Override
+//                    public void call(Throwable throwable) {
+//                        didFailConsumePurchase();
+//                    }
+//                });
     }
 
-    private void didSucceedConsumePurchase(Response response) {
+    private void didSucceedConsumePurchase() {
         // reload the list once the product is consumed
         load();
 
         String title;
         String message;
-        if (response.isSuccess()) {
+//        if (response.isSuccess()) {
             title = "Product consumed";
             message = "Hope you enjoyed it";
-        } else {
-            title = "Failed to consume";
-            message = Utils.getMessage(response.getResponseCode());
-        }
+//        } else {
+//            title = "Failed to consume";
+//            message = Utils.getMessage(response.getResponseCode());
+//        }
 
         dialog = new AlertDialog.Builder(getContext())
                 .setTitle(title)

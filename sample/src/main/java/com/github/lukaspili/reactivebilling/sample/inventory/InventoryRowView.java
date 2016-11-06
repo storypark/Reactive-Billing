@@ -6,11 +6,10 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.github.lukaspili.reactivebilling.model.Purchase;
+import com.github.lukaspili.reactivebilling.Purchase;
 import com.github.lukaspili.reactivebilling.sample.R;
 
 import java.text.SimpleDateFormat;
-import java.util.Date;
 
 /**
  * Created by lukasz on 06/05/16.
@@ -29,10 +28,11 @@ public class InventoryRowView extends LinearLayout {
     }
 
     public void bind(Purchase purchase, SimpleDateFormat dateFormat) {
-        titleTextView.setText(purchase.getProductId());
+        // TODO: 7/11/16 Update sample for new api
+        titleTextView.setText("TODO");
 
-        String date = "Bought on: " + dateFormat.format(new Date(purchase.getPurchaseTime()));
-        String state = "State: " + purchase.getPurchaseState().toString();
+        String date = "Bought on: TODO";
+        String state = "State: TODO";
 
         descriptionTextView.setText(String.format("%s\n%s", date, state));
     }
