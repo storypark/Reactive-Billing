@@ -1,6 +1,5 @@
 package com.github.lukaspili.reactivebilling.parser;
 
-import com.github.lukaspili.reactivebilling.ReactiveBillingLogger;
 import com.github.lukaspili.reactivebilling.model.SkuDetails;
 
 import org.json.JSONException;
@@ -12,7 +11,7 @@ import org.json.JSONObject;
 public class SkuDetailsParser {
 
     public static SkuDetails parse(String value) {
-//        ReactiveBillingLogger.log("sku details json: %s", value);
+//        RxBillingLogger.v("sku details json: %s", value);
 
         JSONObject json;
         try {

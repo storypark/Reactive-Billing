@@ -6,7 +6,7 @@ import android.os.RemoteException;
 
 import com.github.lukaspili.reactivebilling.BillingService;
 import com.github.lukaspili.reactivebilling.PurchaseFlowService;
-import com.github.lukaspili.reactivebilling.ReactiveBillingLogger;
+import com.github.lukaspili.reactivebilling.RxBillingLogger;
 import com.github.lukaspili.reactivebilling.model.PurchaseType;
 import com.github.lukaspili.reactivebilling.response.GetBuyIntentResponse;
 import com.github.lukaspili.reactivebilling.response.Response;
@@ -48,7 +48,7 @@ public class GetBuyIntentObservable extends BaseObservable<Response> {
             return;
         }
 
-        ReactiveBillingLogger.log("Will start purchase flow: %b (thread %s)", response.isSuccess(), Thread.currentThread().getName());
+        RxBillingLogger.v("Will start purchase flow: %b (thread %s)", response.isSuccess(), Thread.currentThread().getName());
         if (response.isSuccess()) {
             purchaseFlowService.startFlow(response.getIntent(), extras);
         }

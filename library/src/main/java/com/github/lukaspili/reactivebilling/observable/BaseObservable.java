@@ -9,7 +9,7 @@ import android.os.Looper;
 
 import com.android.vending.billing.IInAppBillingService;
 import com.github.lukaspili.reactivebilling.BillingService;
-import com.github.lukaspili.reactivebilling.ReactiveBillingLogger;
+import com.github.lukaspili.reactivebilling.RxBillingLogger;
 
 import java.util.concurrent.Semaphore;
 
@@ -40,18 +40,18 @@ public abstract class BaseObservable<T> implements Observable.OnSubscribe<T> {
         final boolean useSemaphore = Looper.myLooper() != Looper.getMainLooper();
         final Connection connection = new Connection(subscriber, useSemaphore);
 
-        ReactiveBillingLogger.log("Bind service (thread %s)", Thread.currentThread().getName());
+        RxBillingLogger.v("Bind service (thread %s)", Thread.currentThread().getName());
         try {
             context.bindService(intent, connection, Context.BIND_AUTO_CREATE);
         } catch (SecurityException e) {
-            ReactiveBillingLogger.log(e, "Bind service error");
+            RxBillingLogger.e(e, "Bind service error");
             subscriber.onError(e);
         }
 
         subscriber.add(Subscriptions.create(new Action0() {
             @Override
             public void call() {
-                ReactiveBillingLogger.log("Unbind service (thread %s)", Thread.currentThread().getName());
+                RxBillingLogger.v("Unbind service (thread %s)", Thread.currentThread().getName());
                 context.unbindService(connection);
             }
         }));
@@ -60,7 +60,7 @@ public abstract class BaseObservable<T> implements Observable.OnSubscribe<T> {
             // freeze the current RX thread until service is connected
             // because bindService() will call the connection callback on the main thread
             // we want to get back on the current RX thread
-            ReactiveBillingLogger.log("Acquire semaphore until service is ready (thread %s)", Thread.currentThread().getName());
+            RxBillingLogger.v("Acquire semaphore until service is ready (thread %s)", Thread.currentThread().getName());
             semaphore.acquireUninterruptibly();
 
             // once the semaphore is released
@@ -71,7 +71,7 @@ public abstract class BaseObservable<T> implements Observable.OnSubscribe<T> {
     }
 
     private void deliverBillingService(Observer observer) {
-        ReactiveBillingLogger.log("Billing service ready (thread %s)", Thread.currentThread().getName());
+        RxBillingLogger.v("Billing service ready (thread %s)", Thread.currentThread().getName());
         onBillingServiceReady(billingService, observer);
     }
 
@@ -93,7 +93,7 @@ public abstract class BaseObservable<T> implements Observable.OnSubscribe<T> {
          */
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            ReactiveBillingLogger.log("Service connected (thread %s)", Thread.currentThread().getName());
+            RxBillingLogger.v("Service connected (thread %s)", Thread.currentThread().getName());
 
             IInAppBillingService inAppBillingService = IInAppBillingService.Stub.asInterface(service);
             billingService = new BillingService(context, inAppBillingService);
@@ -101,7 +101,7 @@ public abstract class BaseObservable<T> implements Observable.OnSubscribe<T> {
             if (useSemaphore) {
                 // once the service is available, release the semaphore
                 // that is blocking the originating thread
-                ReactiveBillingLogger.log("Release semaphore (thread %s)", Thread.currentThread().getName());
+                RxBillingLogger.v("Release semaphore (thread %s)", Thread.currentThread().getName());
                 semaphore.release();
             } else {
                 deliverBillingService(observer);
@@ -110,7 +110,7 @@ public abstract class BaseObservable<T> implements Observable.OnSubscribe<T> {
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            ReactiveBillingLogger.log("Service disconnected (thread %s)", Thread.currentThread().getName());
+            RxBillingLogger.v("Service disconnected (thread %s)", Thread.currentThread().getName());
             billingService = null;
         }
     }

@@ -20,7 +20,7 @@ import android.content.Intent;
 import android.content.IntentSender;
 import android.os.Bundle;
 
-public class ReactiveBillingShadowActivity extends Activity {
+public final class RxBillingShadowActivity extends Activity {
 
     private static final int REQUEST_CODE = 1337;
 
@@ -30,7 +30,7 @@ public class ReactiveBillingShadowActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        ReactiveBillingLogger.log("Shadow activity - on create");
+        RxBillingLogger.v("Shadow activity - on create");
 
         if (savedInstanceState == null) {
             handleIntent(getIntent());
@@ -39,7 +39,7 @@ public class ReactiveBillingShadowActivity extends Activity {
 
     @Override
     protected void onDestroy() {
-        ReactiveBillingLogger.log("Shadow activity - on destroy");
+        RxBillingLogger.v("Shadow activity - on destroy");
         super.onDestroy();
     }
 
@@ -49,7 +49,7 @@ public class ReactiveBillingShadowActivity extends Activity {
     }
 
     private void handleIntent(Intent intent) {
-        ReactiveBillingLogger.log("Shadow activity - handle intent");
+        RxBillingLogger.v("Shadow activity - handle intent");
 
         extras = intent.getBundleExtra("BUY_EXTRAS");
         PendingIntent buyIntent = intent.getParcelableExtra("BUY_INTENT");
@@ -57,7 +57,7 @@ public class ReactiveBillingShadowActivity extends Activity {
         try {
             startIntentSenderForResult(buyIntent.getIntentSender(), REQUEST_CODE, new Intent(), 0, 0, 0);
         } catch (IntentSender.SendIntentException e) {
-            ReactiveBillingLogger.log(e, "Shadow activity - cannot start buy intent");
+            RxBillingLogger.e(e, "Shadow activity - cannot start buy intent");
         }
     }
 
@@ -79,12 +79,13 @@ public class ReactiveBillingShadowActivity extends Activity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode != REQUEST_CODE) {
+            RxBillingLogger.w("Shadow activity - received request code not requested by this activity (sent: %d, received: %d)", REQUEST_CODE, requestCode);
             return; // can it happen?
         }
 
-        ReactiveBillingLogger.log("Shadow activity - on activity result");
+        RxBillingLogger.v("Shadow activity - on activity result");
 
-        ReactiveBilling.getInstance(this).getPurchaseFlowService().onActivityResult(resultCode, data, extras);
+        RxBilling.getPurchaseFlowService(this).onActivityResult(resultCode, data, extras);
         finish();
     }
 }

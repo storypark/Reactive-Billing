@@ -1,6 +1,7 @@
 package com.github.lukaspili.reactivebilling.sample.shop;
 
 import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -14,7 +15,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.github.lukaspili.reactivebilling.ReactiveBilling;
+import com.github.lukaspili.reactivebilling.RxBilling;
 import com.github.lukaspili.reactivebilling.model.PurchaseType;
 import com.github.lukaspili.reactivebilling.model.SkuDetails;
 import com.github.lukaspili.reactivebilling.response.GetSkuDetailsResponse;
@@ -101,7 +102,10 @@ public class ShopFragment extends Fragment implements TabsAdapter.Tab {
         recyclerView.setAdapter(adapter);
 
         Log.d(getClass().getName(), "Subscribe to purchase flow");
-        subscription = ReactiveBilling.getInstance(getContext()).purchaseFlow()
+
+        final Context context = getContext();
+
+        subscription = RxBilling.purchaseFlow(context)
                 .flatMap(new Func1<PurchaseResponse, Observable<PurchaseResponse>>() {
                     @Override
                     public Observable<PurchaseResponse> call(final PurchaseResponse purchaseResponse) {
@@ -110,7 +114,7 @@ public class ShopFragment extends Fragment implements TabsAdapter.Tab {
 
                         if (purchaseResponse.isSuccess() && consume) {
                             Log.d(getClass().getName(), "Item bought, consume it directly");
-                            return ReactiveBilling.getInstance(getContext()).consumePurchase(purchaseResponse.getPurchase().getPurchaseToken())
+                            return RxBilling.consumePurchase(context, purchaseResponse.getPurchase().getPurchaseToken())
                                     .subscribeOn(Schedulers.io())
                                     .observeOn(AndroidSchedulers.mainThread())
                                     .map(new Func1<Response, PurchaseResponse>() {
@@ -155,8 +159,7 @@ public class ShopFragment extends Fragment implements TabsAdapter.Tab {
     private void load() {
         Log.d(getClass().getName(), "Load shop");
 
-        ReactiveBilling.getInstance(getContext())
-                .getSkuDetails(PurchaseType.PRODUCT, "coffee", "beer")
+        RxBilling.skuDetails(getContext(), PurchaseType.PRODUCT, "coffee", "beer")
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Action1<GetSkuDetailsResponse>() {
@@ -198,8 +201,7 @@ public class ShopFragment extends Fragment implements TabsAdapter.Tab {
         final Bundle extras = new Bundle();
         extras.putBoolean("consume", consume);
 
-        ReactiveBilling.getInstance(getContext())
-                .startPurchase(skuDetails.getProductId(), skuDetails.getPurchaseType(), null, extras)
+        RxBilling.startPurchase(getContext(), skuDetails.getProductId(), skuDetails.getPurchaseType(), null, extras)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Action1<Response>() {

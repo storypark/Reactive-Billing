@@ -14,7 +14,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.github.lukaspili.reactivebilling.ReactiveBilling;
+import com.github.lukaspili.reactivebilling.RxBilling;
 import com.github.lukaspili.reactivebilling.model.Purchase;
 import com.github.lukaspili.reactivebilling.model.PurchaseType;
 import com.github.lukaspili.reactivebilling.response.GetPurchasesResponse;
@@ -104,8 +104,7 @@ public class InventoryFragment extends Fragment implements TabsAdapter.Tab {
     private void load() {
         Log.d(getClass().getName(), "Load inventory");
 
-        ReactiveBilling.getInstance(getContext())
-                .getPurchases(PurchaseType.PRODUCT, null)
+        RxBilling.purchases(getContext(), PurchaseType.PRODUCT, null)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Action1<GetPurchasesResponse>() {
@@ -155,8 +154,7 @@ public class InventoryFragment extends Fragment implements TabsAdapter.Tab {
     // Consume
 
     private void consume(Purchase purchase) {
-        ReactiveBilling.getInstance(getContext())
-                .consumePurchase(purchase.getPurchaseToken())
+        RxBilling.consumePurchase(getContext(), purchase.getPurchaseToken())
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Action1<Response>() {
