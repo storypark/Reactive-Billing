@@ -63,6 +63,10 @@ public final class RxBilling {
         RxBillingLogger.setLogger(logger);
     }
 
+    public static void setPackageName(@NonNull Context context, @NonNull String packageName) {
+        RxBilling.get(context).packageName = packageName;
+    }
+
     public static final String PURCHASE_TYPE_MANAGED_PRODUCT = "inapp";
     public static final String PURCHASE_TYPE_SUBSCRIPTION = "subs";
     @StringDef({
@@ -75,20 +79,28 @@ public final class RxBilling {
         return RxBilling.get(context).purchaseFlowService;
     }
 
+    @NonNull @CheckResult @MainThread
+    /*package*/ static String getPackageName(@NonNull Context context) {
+        return RxBilling.get(context).packageName;
+    }
+
     private static RxBilling instance;
 
     private final PurchaseFlowService purchaseFlowService;
+    private String packageName;
 
     @MainThread
     private static RxBilling get(@NonNull Context context) {
         if (instance == null) {
-            instance = new RxBilling(new PurchaseFlowService(context.getApplicationContext()));
+            instance = new RxBilling(context.getApplicationContext(),
+                    new PurchaseFlowService(context.getApplicationContext()));
         }
         return instance;
     }
 
-    private RxBilling(@NonNull PurchaseFlowService purchaseFlowService) {
+    private RxBilling(@NonNull Context context, @NonNull PurchaseFlowService purchaseFlowService) {
         this.purchaseFlowService = purchaseFlowService;
+        this.packageName = context.getPackageName();
     }
 
     public interface Logger {
