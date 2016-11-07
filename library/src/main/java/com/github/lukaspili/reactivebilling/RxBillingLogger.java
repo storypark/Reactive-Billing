@@ -173,10 +173,10 @@ public final class RxBillingLogger {
     private static RxBilling.Logger logger = NopLogger.INSTANCE;
 
     private static final class NopLogger implements RxBilling.Logger {
-        private static final RxBilling.Logger INSTANCE = new DebugLogger();
+        private static final RxBilling.Logger INSTANCE = new NopLogger();
 
         private NopLogger() {}
-        @Override  public void log(int priority, String message, Throwable t) {}
+        @Override public void log(int priority, String message, Throwable t) {}
     }
 
     public static final class DebugLogger implements RxBilling.Logger {
