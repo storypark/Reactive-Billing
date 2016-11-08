@@ -6,11 +6,10 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Size;
 
 import java.util.Arrays;
-import java.util.List;
 
 import rx.Observer;
 
-/*package*/ final class SkuDetailsOnSubscribe extends BaseObservable<List<String>> {
+/*package*/ final class SkuDetailsOnSubscribe extends BaseObservable<SkuDetails> {
 
     private final String purchaseType;
     private final String[] productIds;
@@ -22,9 +21,9 @@ import rx.Observer;
     }
 
     @Override
-    protected void onBillingServiceReady(@NonNull BillingService billingService, @NonNull Observer<? super List<String>> observer) {
+    protected void onBillingServiceReady(@NonNull BillingService billingService, @NonNull Observer<? super SkuDetails> observer) {
         try {
-            final List<String> skuDetails = billingService.getSkuDetails(purchaseType, productIds);
+            final SkuDetails skuDetails = billingService.getSkuDetails(purchaseType, productIds);
             if (skuDetails != null) {
                 observer.onNext(skuDetails);
                 observer.onCompleted();

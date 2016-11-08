@@ -23,8 +23,6 @@ import android.support.annotation.Nullable;
 import android.support.annotation.Size;
 import android.support.annotation.StringDef;
 
-import java.util.List;
-
 import rx.Observable;
 
 public final class RxBilling {
@@ -40,7 +38,7 @@ public final class RxBilling {
     }
 
     @NonNull @CheckResult @MainThread
-    public static Observable<List<String>> skuDetails(@NonNull Context context, @NonNull @PurchaseType String purchaseType, @NonNull @Size(min = 1) String... productIds) {
+    public static Observable<SkuDetails> skuDetails(@NonNull Context context, @NonNull @PurchaseType String purchaseType, @NonNull @Size(min = 1) String... productIds) {
         return Observable.create(new SkuDetailsOnSubscribe(context, purchaseType, productIds));
     }
 
@@ -50,7 +48,7 @@ public final class RxBilling {
     }
 
     @NonNull @CheckResult @MainThread
-    public static Observable<Void> startPurchase(@NonNull Context context, @NonNull String productId, @NonNull @PurchaseType String purchaseType, @Nullable String developerPayload, @Nullable Bundle extras) {
+    public static Observable<Integer> startPurchase(@NonNull Context context, @NonNull String productId, @NonNull @PurchaseType String purchaseType, @Nullable String developerPayload, @Nullable Bundle extras) {
         return Observable.create(new StartPurchaseOnSubscribe(context, getPurchaseFlowService(context), productId, purchaseType, developerPayload, extras));
     }
 

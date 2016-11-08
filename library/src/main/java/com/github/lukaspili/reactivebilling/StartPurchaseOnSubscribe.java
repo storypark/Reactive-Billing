@@ -1,6 +1,5 @@
 package com.github.lukaspili.reactivebilling;
 
-import android.app.PendingIntent;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.RemoteException;
@@ -9,7 +8,7 @@ import android.support.annotation.Nullable;
 
 import rx.Observer;
 
-/*package*/ final class StartPurchaseOnSubscribe extends BaseObservable<Void> {
+/*package*/ final class StartPurchaseOnSubscribe extends BaseObservable<Integer> {
 
     private final PurchaseFlowService purchaseFlowService;
     private final String productId;
@@ -27,13 +26,16 @@ import rx.Observer;
     }
 
     @Override
-    protected void onBillingServiceReady(@NonNull BillingService billingService, @NonNull Observer<? super Void> observer) {
+    protected void onBillingServiceReady(@NonNull BillingService billingService, @NonNull Observer<? super Integer> observer) {
         try {
-            final PendingIntent buyIntent = billingService.getBuyIntent(productId, purchaseType, developerPayload);
+            final BuyIntent buyIntent = billingService.getBuyIntent(productId, purchaseType, developerPayload);
             if (buyIntent != null) {
-                observer.onNext(null);
+                // TODO: Should this throw an onError or continue to onNext the response code?
+                observer.onNext(buyIntent.responseCode);
                 observer.onCompleted();
-                purchaseFlowService.startFlow(buyIntent, extras);
+                if (buyIntent.buyIntent != null) {
+                    purchaseFlowService.startFlow(buyIntent.buyIntent, extras);
+                }
             } else {
                 observer.onError(new BillingRequestFailedException(
                         "Failed to start purchase (" +

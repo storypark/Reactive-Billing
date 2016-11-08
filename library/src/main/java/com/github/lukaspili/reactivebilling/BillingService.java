@@ -13,7 +13,6 @@ import com.android.vending.billing.IInAppBillingService;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 /**
  * Created by lukasz on 04/05/16.
@@ -46,7 +45,7 @@ import java.util.List;
         return response == 0;
     }
 
-    @Nullable
+    @NonNull
     /*package*/ Purchases getPurchases(@NonNull @RxBilling.PurchaseType String purchaseType, @Nullable String continuationToken) throws RemoteException {
         RxBillingLogger.v("Get purchases - request (thread %s)", Thread.currentThread().getName());
 
@@ -54,19 +53,20 @@ import java.util.List;
         final int response = bundle.getInt("RESPONSE_CODE", -1);
 
         RxBillingLogger.v("Get purchases - response code: %s", response);
-        if (response != 0) {
-            return null;
+        if (bundle == null) {
+            return new Purchases(response, null, null, null, null);
         }
 
         return new Purchases(
+                response,
                 bundle.getStringArrayList("INAPP_PURCHASE_ITEM_LIST"),
                 bundle.getStringArrayList("INAPP_PURCHASE_DATA_LIST"),
                 bundle.getStringArrayList("INAPP_DATA_SIGNATURE_LIST"),
                 bundle.getString("INAPP_CONTINUATION_TOKEN"));
     }
 
-    @Nullable @SuppressWarnings("ConstantConditions")
-    /*package*/ List<String> getSkuDetails(@NonNull @RxBilling.PurchaseType String purchaseType, @NonNull @Size(min = 1) String... productIds) throws RemoteException {
+    @NonNull @SuppressWarnings("ConstantConditions")
+    /*package*/ SkuDetails getSkuDetails(@NonNull @RxBilling.PurchaseType String purchaseType, @NonNull @Size(min = 1) String... productIds) throws RemoteException {
         if (productIds == null || productIds.length == 0) {
             throw new IllegalArgumentException("Product ids cannot be blank");
         }
@@ -80,26 +80,26 @@ import java.util.List;
         final int response = resultBundle.getInt("RESPONSE_CODE", -1);
 
         RxBillingLogger.v("Get sku details - response code: %s", response);
-        if (response != 0) {
-            return null;
+        if (resultBundle == null) {
+            return new SkuDetails(response, null);
         }
 
-        return resultBundle.getStringArrayList("DETAILS_LIST");
+        return new SkuDetails(response, resultBundle.getStringArrayList("DETAILS_LIST"));
     }
 
-    @Nullable
-    /*package*/ PendingIntent getBuyIntent(@NonNull String productId, @NonNull @RxBilling.PurchaseType String purchaseType, @Nullable String developerPayload) throws RemoteException {
+    @NonNull
+    /*package*/ BuyIntent getBuyIntent(@NonNull String productId, @NonNull @RxBilling.PurchaseType String purchaseType, @Nullable String developerPayload) throws RemoteException {
         RxBillingLogger.v("Get buy intent - request: %s (thread %s)", productId, Thread.currentThread().getName());
 
         final Bundle bundle = billingService.getBuyIntent(BillingService.API_VERSION, packageName, productId, purchaseType, developerPayload);
         final int response = bundle.getInt("RESPONSE_CODE", -1);
 
         RxBillingLogger.v("Get buy intent - response code: %s", response);
-        if (response != 0) {
-            return null;
+        if (bundle == null) {
+            return new BuyIntent(response, null);
         }
 
-        return bundle.getParcelable("BUY_INTENT");
+        return new BuyIntent(response, (PendingIntent) bundle.getParcelable("BUY_INTENT"));
     }
 
 }
